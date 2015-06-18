@@ -1,6 +1,6 @@
 <?php
 /*
-* 2007-2013 PrestaShop
+* 2007-2015 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -19,13 +19,13 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author PrestaShop SA <contact@prestashop.com>
-*  @copyright  2007-2013 PrestaShop SA
+*  @copyright  2007-2015 PrestaShop SA
 *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 */
 
-if (file_exists(dirname(__FILE__).'/../../config/settings.inc.php'))
-	include_once(dirname(__FILE__).'/../../config/settings.inc.php');
+if (file_exists(_PS_ROOT_DIR_.'/config/settings.inc.php'))
+	include_once(_PS_ROOT_DIR_.'/config/settings.inc.php');
 
 abstract class DbCore
 {
@@ -79,12 +79,7 @@ abstract class DbCore
 	/**
 	 * @var array Object instance for singleton
 	 */
-	protected static $_servers = array(
-		array('server' => _DB_SERVER_, 'user' => _DB_USER_, 'password' => _DB_PASSWD_, 'database' => _DB_NAME_), /* MySQL Master server */
-		// Add here your slave(s) server(s)
-			// array('server' => '192.168.0.15', 'user' => 'rep', 'password' => '123456', 'database' => 'rep'),
-			// array('server' => '192.168.0.3', 'user' => 'myuser', 'password' => 'mypassword', 'database' => 'mydatabase'),
-	);
+	protected static $_servers = array();
 
 	/**
 	 * Store last executed query
@@ -143,6 +138,14 @@ abstract class DbCore
 	abstract public function nextRow($result = false);
 
 	/**
+	 * Get all rows for a query which return an array
+	 *
+	 * @param mixed $result
+	 */
+
+	abstract protected function getAll($result = false);
+
+	/**
 	 * Get database version
 	 *
 	 * @return string
@@ -170,6 +173,8 @@ abstract class DbCore
 	/* do not remove, useful for some modules */
 	abstract public function set_db($db_name);
 
+	abstract public function getBestEngine();
+
 	/**
 	 * Get Db object instance
 	 *
@@ -180,13 +185,21 @@ abstract class DbCore
 	{
 		static $id = 0;
 
+		// This MUST not be declared with the class members because some defines (like _DB_SERVER_) may not exist yet (the constructor can be called directly with params)
+		if (!self::$_servers)
+			self::$_servers = array(
+				array('server' => _DB_SERVER_, 'user' => _DB_USER_, 'password' => _DB_PASSWD_, 'database' => _DB_NAME_), /* MySQL Master server */
+			);
+
+		Db::loadSlaveServers();
+
 		$total_servers = count(self::$_servers);
 		if ($master || $total_servers == 1)
 			$id_server = 0;
 		else
 		{
 			$id++;
-			$id_server = ($total_servers > 2 && ($id % $total_servers) != 0) ? $id : 1;
+			$id_server = ($total_servers > 2 && ($id % $total_servers) != 0) ? $id % $total_servers : 1;
 		}
 
 		if (!isset(self::$instance[$id_server]))
@@ -203,6 +216,19 @@ abstract class DbCore
 		return self::$instance[$id_server];
 	}
 
+	protected static function loadSlaveServers()
+	{
+		static $is_loaded = null;
+		if ($is_loaded !== null)
+			return;
+
+		// Add here your slave(s) server(s) in this file
+		if (file_exists(_PS_ROOT_DIR_.'/config/db_slave_server.inc.php'))
+			self::$_servers = array_merge(self::$_servers, require(_PS_ROOT_DIR_.'/config/db_slave_server.inc.php'));
+
+		$is_loaded = true;
+	}
+
 	/**
 	 * Get child layer class
 	 *
@@ -213,7 +239,7 @@ abstract class DbCore
 		$class = 'MySQL';
 		if (PHP_VERSION_ID >= 50200 && extension_loaded('pdo_mysql'))
 			$class = 'DbPDO';
-		else if (extension_loaded('mysqli'))
+		elseif (extension_loaded('mysqli'))
 			$class = 'DbMySQLi';
 		return $class;
 	}
@@ -303,6 +329,13 @@ abstract class DbCore
 			$sql = $sql->build();
 
 		$this->result = $this->_query($sql);
+
+		if (!$this->result && $this->getNumberError() == 2006)
+		{
+			if ($this->connect())
+				$this->result = $this->_query($sql);
+		}
+
 		if (_PS_DEBUG_SQL_)
 			$this->displayError($sql);
 		return $this->result;
@@ -329,9 +362,9 @@ abstract class DbCore
 
 		if ($type == Db::INSERT)
 			$insert_keyword = 'INSERT';
-		else if ($type == Db::INSERT_IGNORE)
+		elseif ($type == Db::INSERT_IGNORE)
 			$insert_keyword = 'INSERT IGNORE';
-		else if ($type == Db::REPLACE)
+		elseif ($type == Db::REPLACE)
 			$insert_keyword = 'REPLACE';
 		else
 			throw new PrestaShopDatabaseException('Bad keyword, must be Db::INSERT or Db::INSERT_IGNORE or Db::REPLACE');
@@ -355,7 +388,7 @@ abstract class DbCore
 						throw new PrestaShopDatabaseException('Keys form $data subarray don\'t match');
 				}
 				else
-					$keys[] = "`$key`";
+					$keys[] = '`'.bqSQL($key).'`';
 
 				if (!is_array($value))
 					$value = array('type' => 'text', 'value' => $value);
@@ -390,15 +423,15 @@ abstract class DbCore
 		if ($add_prefix)
 			$table = _DB_PREFIX_.$table;
 
-		$sql = 'UPDATE `'.$table.'` SET ';
+		$sql = 'UPDATE `'.bqSQL($table).'` SET ';
 		foreach ($data as $key => $value)
 		{
 			if (!is_array($value))
 				$value = array('type' => 'text', 'value' => $value);
 			if ($value['type'] == 'sql')
-				$sql .= "`$key` = {$value['value']},";
+				$sql .= '`'.bqSQL($key)."` = {$value['value']},";
 			else
-				$sql .= ($null_values && ($value['value'] === '' || is_null($value['value']))) ? "`$key` = NULL," : "`$key` = '{$value['value']}',";
+				$sql .= ($null_values && ($value['value'] === '' || is_null($value['value']))) ? '`'.bqSQL($key).'` = NULL,' : '`'.bqSQL($key)."` = '{$value['value']}',";
 		}
 
 		$sql = rtrim($sql, ',');
@@ -473,27 +506,32 @@ abstract class DbCore
 
 		$this->result = false;
 		$this->last_query = $sql;
-		if ($use_cache && $this->is_cache_enabled && $array && ($result = Cache::getInstance()->get(md5($sql))))
+
+		if ($use_cache && $this->is_cache_enabled && $array && ($result = Cache::getInstance()->get(Tools::encryptIV($sql))) !== false)
 		{
 			$this->last_cached = true;
 			return $result;
 		}
 
 		$this->result = $this->query($sql);
+
 		if (!$this->result)
-			return false;
+			$result = false;
+		else
+		{
+			if (!$array)
+			{
+				$use_cache = false;
+				$result = $this->result;
+			}
+			else
+				$result = $this->getAll($this->result);
+		}
 
 		$this->last_cached = false;
-		if (!$array)
-			return $this->result;
-
-		$result_array = array();
-		while ($row = $this->nextRow($this->result))
-			$result_array[] = $row;
-
 		if ($use_cache && $this->is_cache_enabled)
-			Cache::getInstance()->setQuery($sql, $result_array);
-		return $result_array;
+			Cache::getInstance()->setQuery($sql, $result);
+		return $result;
 	}
 
 	/**
@@ -509,21 +547,22 @@ abstract class DbCore
 		if ($sql instanceof DbQuery)
 			$sql = $sql->build();
 
-		$sql .= ' LIMIT 1';
+		$sql = rtrim($sql, " \t\n\r\0\x0B;").' LIMIT 1';
 		$this->result = false;
 		$this->last_query = $sql;
-		if ($use_cache && $this->is_cache_enabled && ($result = Cache::getInstance()->get(md5($sql))))
+		if ($use_cache && $this->is_cache_enabled && ($result = Cache::getInstance()->get(Tools::encryptIV($sql))) !== false)
 		{
 			$this->last_cached = true;
 			return $result;
 		}
-
 		$this->result = $this->query($sql);
 		if (!$this->result)
-			return false;
-
+			$result = false;
+		else
+			$result = $this->nextRow($this->result);
 		$this->last_cached = false;
-		$result = $this->nextRow($this->result);
+		if (is_null($result))
+			$result = false;
 		if ($use_cache && $this->is_cache_enabled)
 			Cache::getInstance()->setQuery($sql, $result);
 		return $result;
@@ -557,11 +596,11 @@ abstract class DbCore
 		{
 			$nrows = $this->_numRows($this->result);
 			if ($this->is_cache_enabled)
-				Cache::getInstance()->set(md5($this->last_query).'_nrows', $nrows);
+				Cache::getInstance()->set(Tools::encryptIV($this->last_query).'_nrows', $nrows);
 			return $nrows;
 		}
-		else if ($this->is_cache_enabled && $this->last_cached)
-			return Cache::getInstance()->get(md5($this->last_query).'_nrows');
+		elseif ($this->is_cache_enabled && $this->last_cached)
+			return Cache::getInstance()->get(Tools::encryptIV($this->last_query).'_nrows');
 	}
 
 	/**
@@ -601,7 +640,7 @@ abstract class DbCore
 			$dbg = debug_backtrace();
 			WebserviceRequest::getInstance()->setError(500, '[SQL Error] '.$this->getMsgError().'. From '.(isset($dbg[3]['class']) ? $dbg[3]['class'] : '').'->'.$dbg[3]['function'].'() Query was : '.$sql, 97);
 		}
-		else if (_PS_DEBUG_SQL_ && $errno && !defined('PS_INSTALLATION_IN_PROGRESS'))
+		elseif (_PS_DEBUG_SQL_ && $errno && !defined('PS_INSTALLATION_IN_PROGRESS'))
 		{
 			if ($sql)
 				throw new PrestaShopDatabaseException($this->getMsgError().'<br /><br /><pre>'.$sql.'</pre>');
@@ -674,9 +713,14 @@ abstract class DbCore
 		return call_user_func_array(array(Db::getClass(), 'hasTableWithSamePrefix'), array($server, $user, $pwd, $db, $prefix));
 	}
 
-	public static function checkCreatePrivilege($server, $user, $pwd, $db, $prefix, $engine)
+	public static function checkCreatePrivilege($server, $user, $pwd, $db, $prefix, $engine = null)
 	{
 		return call_user_func_array(array(Db::getClass(), 'checkCreatePrivilege'), array($server, $user, $pwd, $db, $prefix, $engine));
+	}
+
+	public static function checkAutoIncrement($server, $user, $pwd)
+	{
+		return call_user_func_array(array(Db::getClass(), 'checkAutoIncrement'), array($server, $user, $pwd));
 	}
 
 	/**
@@ -695,7 +739,6 @@ abstract class DbCore
 	{
 		Tools::displayAsDeprecated();
 		$ret = Db::s($sql, $use_cache);
-		p($ret);
 		return $ret;
 	}
 

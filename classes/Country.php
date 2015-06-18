@@ -1,6 +1,6 @@
 <?php
 /*
-* 2007-2013 PrestaShop
+* 2007-2015 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -19,7 +19,7 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author PrestaShop SA <contact@prestashop.com>
-*  @copyright  2007-2013 PrestaShop SA
+*  @copyright  2007-2015 PrestaShop SA
 *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 */
@@ -121,20 +121,23 @@ class CountryCore extends ObjectModel
 	public static function getCountries($id_lang, $active = false, $contain_states = false, $list_states = true)
 	{
 		$countries = array();
-		foreach (Db::getInstance(_PS_USE_SQL_SLAVE_)->ExecuteS('SELECT cl.*,c.*, cl.`name` country, z.`name` zone
-				FROM `'._DB_PREFIX_.'country` c '.Shop::addSqlAssociation('country', 'c').'
-				LEFT JOIN `'._DB_PREFIX_.'country_lang` cl ON (c.`id_country` = cl.`id_country` AND cl.`id_lang` = '.(int)$id_lang.')
-				LEFT JOIN `'._DB_PREFIX_.'zone` z ON (z.`id_zone` = c.`id_zone`)
-				WHERE 1'.($active ? ' AND c.active = 1' : '').($contain_states ? ' AND c.`contains_states` = '.(int)$contain_states : '').'
-				ORDER BY cl.name ASC') as $country)
-			$countries[$country['id_country']] = $country;
+		$result = Db::getInstance(_PS_USE_SQL_SLAVE_)->ExecuteS('
+		SELECT cl.*,c.*, cl.`name` country, z.`name` zone
+		FROM `'._DB_PREFIX_.'country` c '.Shop::addSqlAssociation('country', 'c').'
+		LEFT JOIN `'._DB_PREFIX_.'country_lang` cl ON (c.`id_country` = cl.`id_country` AND cl.`id_lang` = '.(int)$id_lang.')
+		LEFT JOIN `'._DB_PREFIX_.'zone` z ON (z.`id_zone` = c.`id_zone`)
+		WHERE 1'.($active ? ' AND c.active = 1' : '').($contain_states ? ' AND c.`contains_states` = '.(int)$contain_states : '').'
+		ORDER BY cl.name ASC');
+		foreach ($result as $row)
+			$countries[$row['id_country']] = $row;
 
 		if ($list_states)
-			foreach (Db::getInstance(_PS_USE_SQL_SLAVE_)->ExecuteS('SELECT * FROM `'._DB_PREFIX_.'state` ORDER BY `name` ASC') as $state)
-				if (isset($countries[$state['id_country']])) /* Does not keep the state if its country has been disabled and not selected */
-					if ($state['active'] == 1)
-						$countries[$state['id_country']]['states'][] = $state;
-
+		{
+			$result = Db::getInstance(_PS_USE_SQL_SLAVE_)->ExecuteS('SELECT * FROM `'._DB_PREFIX_.'state` ORDER BY `name` ASC');
+			foreach ($result as $row)
+				if (isset($countries[$row['id_country']]) && $row['active'] == 1) /* Does not keep the state if its country has been disabled and not selected */
+						$countries[$row['id_country']]['states'][] = $row;
+		}
 		return $countries;
 	}
 
@@ -152,18 +155,20 @@ class CountryCore extends ObjectModel
 	 * Get a country ID with its iso code
 	 *
 	 * @param string $iso_code Country iso code
+ 	 * @param bool $active return only active coutries
 	 * @return integer Country ID
 	 */
-	public static function getByIso($iso_code)
+	public static function getByIso($iso_code, $active = false)
 	{
 		if (!Validate::isLanguageIsoCode($iso_code))
 			die(Tools::displayError());
 		$result = Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow('
-		SELECT `id_country`
-		FROM `'._DB_PREFIX_.'country`
-		WHERE `iso_code` = \''.pSQL(strtoupper($iso_code)).'\'');
-
-		return $result['id_country'];
+			SELECT `id_country`
+			FROM `'._DB_PREFIX_.'country`
+			WHERE `iso_code` = \''.pSQL(strtoupper($iso_code)).'\''
+			.($active ? ' AND active = 1' : '')
+		);
+		return (int)$result['id_country'];
 	}
 
 	public static function getIdZone($id_country)
@@ -180,7 +185,7 @@ class CountryCore extends ObjectModel
 		WHERE `id_country` = '.(int)$id_country);
 
 		self::$_idZones[$id_country] = $result['id_zone'];
-		return $result['id_zone'];
+		return (int)$result['id_zone'];
 	}
 
 	/**
@@ -369,5 +374,11 @@ class CountryCore extends ObjectModel
 		}
 		else
 			return true; 
+	}
+	
+	public function add($autodate = true, $null_values = false)
+	{
+		$return = parent::add($autodate, $null_values) && self::addModuleRestrictions(array(), array(array('id_country' => $this->id)), array());
+		return $return;	
 	}
 }

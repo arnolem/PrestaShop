@@ -1,6 +1,6 @@
 <?php
 /*
-* 2007-2013 PrestaShop
+* 2007-2015 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -19,7 +19,7 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author PrestaShop SA <contact@prestashop.com>
-*  @copyright  2007-2013 PrestaShop SA
+*  @copyright  2007-2015 PrestaShop SA
 *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 */
@@ -34,8 +34,8 @@ class ShopUrlCore extends ObjectModel
 	public $main;
 	public $active;
 
-	protected static $main_domain = null;
-	protected static $main_domain_ssl = null;
+	protected static $main_domain = array();
+	protected static $main_domain_ssl = array();
 
 	/**
 	 * @see ObjectModel::$definition
@@ -54,19 +54,28 @@ class ShopUrlCore extends ObjectModel
 		),
 	);
 
+	protected $webserviceParameters = array(
+		'fields' => array(
+			'id_shop' => array('xlink_resource' => 'shops'),
+		),
+	);
+
 	/**
 	 * @see ObjectModel::getFields()
 	 * @return array
 	 */
 	public function getFields()
 	{
-		$this->physical_uri = trim($this->physical_uri, '/');
+		$this->domain = trim($this->domain);
+		$this->domain_ssl = trim($this->domain_ssl);
+		$this->physical_uri = trim(str_replace(' ', '', $this->physical_uri), '/');
+
 		if ($this->physical_uri)
 			$this->physical_uri = preg_replace('#/+#', '/', '/'.$this->physical_uri.'/');
 		else
 			$this->physical_uri = '/';
 
-		$this->virtual_uri = trim($this->virtual_uri, '/');
+		$this->virtual_uri = trim(str_replace(' ', '', $this->virtual_uri), '/');
 		if ($this->virtual_uri)
 			$this->virtual_uri = preg_replace('#/+#', '/', trim($this->virtual_uri, '/')).'/';
 
@@ -91,11 +100,11 @@ class ShopUrlCore extends ObjectModel
 	 * Get list of shop urls
 	 *
 	 * @param bool $id_shop
-	 * @return Collection
+	 * @return PrestaShopCollection Collection of ShopUrl
 	 */
 	public static function getShopUrls($id_shop = false)
 	{
-		$urls = new Collection('ShopUrl');
+		$urls = new PrestaShopCollection('ShopUrl');
 		if ($id_shop)
 			$urls->where('id_shop', '=', $id_shop);
 		return $urls;
@@ -143,25 +152,35 @@ class ShopUrlCore extends ObjectModel
 		return Db::getInstance()->getValue($sql);
 	}
 
-	public static function getMainShopDomain()
+	public static function cacheMainDomainForShop($id_shop)
 	{
-		if (!self::$main_domain)
-			self::$main_domain = Db::getInstance()->getValue('SELECT domain
-															FROM '._DB_PREFIX_.'shop_url
-															WHERE main=1 AND id_shop = '.Context::getContext()->shop->id);
-		return self::$main_domain;
+		if (!isset(self::$main_domain_ssl[(int)$id_shop]) || !isset(self::$main_domain[(int)$id_shop]))
+		{
+			$row = Db::getInstance()->getRow('
+			SELECT domain, domain_ssl
+			FROM '._DB_PREFIX_.'shop_url
+			WHERE main = 1
+			AND id_shop = '.($id_shop !== null ? (int)$id_shop : (int)Context::getContext()->shop->id));
+			self::$main_domain[(int)$id_shop] = $row['domain'];
+			self::$main_domain_ssl[(int)$id_shop] = $row['domain_ssl'];
+		}
+	}
+	
+	public static function resetMainDomainCache()
+	{
+		self::$main_domain = array();
+		self::$main_domain_ssl = array();
 	}
 
-	public static function getMainShopDomainSSL()
+	public static function getMainShopDomain($id_shop = null)
 	{
-		if (!self::$main_domain_ssl)
-		{
-			$sql = 'SELECT domain_ssl
-					FROM '._DB_PREFIX_.'shop_url
-					WHERE main = 1
-						AND id_shop='.Context::getContext()->shop->id;
-			self::$main_domain_ssl = Db::getInstance()->getValue($sql);
-		}
-		return self::$main_domain_ssl;
+		ShopUrl::cacheMainDomainForShop($id_shop);
+		return self::$main_domain[(int)$id_shop];
+	}
+
+	public static function getMainShopDomainSSL($id_shop = null)
+	{
+		ShopUrl::cacheMainDomainForShop($id_shop);
+		return self::$main_domain_ssl[(int)$id_shop];
 	}
 }

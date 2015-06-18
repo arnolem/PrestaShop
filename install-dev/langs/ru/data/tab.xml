@@ -1,105 +1,104 @@
 <?xml version="1.0"?>
 <entity_tab>
-  <tab id="Home" name="Home"/>
-  <tab id="CMS_Pages" name="CMS Pages"/>
-  <tab id="CMS_Categories" name="CMS Categories"/>
-  <tab id="Combinations_Generator" name="Combinations Generator"/>
-  <tab id="Search" name="Search"/>
-  <tab id="Login" name="Login"/>
-  <tab id="Shops" name="Shops"/>
-  <tab id="Shop_URLs" name="Shop URLs"/>
-  <tab id="Catalog" name="Catalog"/>
-  <tab id="Orders" name="Orders"/>
-  <tab id="Customers" name="Customers"/>
-  <tab id="Price_Rules" name="Price Rules"/>
-  <tab id="Shipping" name="Shipping"/>
-  <tab id="Localization" name="Localization"/>
-  <tab id="Modules" name="Modules"/>
-  <tab id="Preferences" name="Preferences"/>
-  <tab id="Advanced_Parameters" name="Advanced Parameters"/>
-  <tab id="Administration" name="Administration"/>
-  <tab id="Stats" name="Stats"/>
-  <tab id="Stock" name="Stock"/>
-  <tab id="Products" name="Products"/>
-  <tab id="Categories" name="Categories"/>
-  <tab id="Monitoring" name="Monitoring"/>
-  <tab id="Attributes_and_Values" name="Attributes and Values"/>
-  <tab id="Features" name="Features"/>
-  <tab id="Manufacturers" name="Manufacturers"/>
-  <tab id="Suppliers" name="Suppliers"/>
-  <tab id="Image_Mapping" name="Image Mapping"/>
-  <tab id="Tags" name="Tags"/>
-  <tab id="Attachments" name="Attachments"/>
-  <tab id="Orders_1" name="Orders"/>
-  <tab id="Invoices" name="Invoices"/>
-  <tab id="Merchandise_Returns" name="Merchandise Returns"/>
-  <tab id="Delivery_Slips" name="Delivery Slips"/>
-  <tab id="Credit_Slips" name="Credit Slips"/>
-  <tab id="Statuses" name="Statuses"/>
-  <tab id="Order_Messages" name="Order Messages"/>
-  <tab id="Customers_1" name="Customers"/>
-  <tab id="Addresses" name="Addresses"/>
-  <tab id="Groups" name="Groups"/>
-  <tab id="Shopping_Carts" name="Shopping Carts"/>
-  <tab id="Customer_Service" name="Customer Service"/>
-  <tab id="Contacts" name="Contacts"/>
-  <tab id="Titles" name="Titles"/>
-  <tab id="Outstanding" name="Outstanding"/>
-  <tab id="Cart_Rules" name="Cart Rules"/>
-  <tab id="Catalog_Price_Rules" name="Catalog Price Rules"/>
-  <tab id="Marketing" name="Marketing"/>
-  <tab id="Shipping_1" name="Shipping"/>
-  <tab id="Carriers" name="Carriers"/>
-  <tab id="Price_Ranges" name="Price Ranges"/>
-  <tab id="Weight_Ranges" name="Weight Ranges"/>
-  <tab id="Localization_1" name="Localization"/>
-  <tab id="Languages" name="Languages"/>
-  <tab id="Zones" name="Zones"/>
-  <tab id="Countries" name="Countries"/>
-  <tab id="States" name="States"/>
-  <tab id="Currencies" name="Currencies"/>
-  <tab id="Taxes" name="Taxes"/>
-  <tab id="Tax_Rules" name="Tax Rules"/>
-  <tab id="Translations" name="Translations"/>
-  <tab id="Modules_1" name="Modules"/>
-  <tab id="Modules_Themes_Catalog" name="Modules &amp; Themes Catalog"/>
-  <tab id="Positions" name="Positions"/>
-  <tab id="Payment" name="Payment"/>
-  <tab id="General" name="General"/>
-  <tab id="Orders_2" name="Orders"/>
-  <tab id="Products_1" name="Products"/>
-  <tab id="Customers_2" name="Customers"/>
-  <tab id="Themes" name="Themes"/>
-  <tab id="SEO_URLs" name="SEO &amp; URLs"/>
-  <tab id="CMS" name="CMS"/>
-  <tab id="Images" name="Images"/>
-  <tab id="Store_Contacts" name="Store Contacts"/>
-  <tab id="Search_1" name="Search"/>
-  <tab id="Maintenance" name="Maintenance"/>
-  <tab id="Geolocation" name="Geolocation"/>
-  <tab id="Configuration_Information" name="Configuration Information"/>
-  <tab id="Performance" name="Performance"/>
-  <tab id="E-mail" name="E-mail"/>
-  <tab id="Multistore" name="Multistore"/>
-  <tab id="CSV_Import" name="CSV Import"/>
+  <tab id="Addresses" name="Адреса"/>
+  <tab id="Administration" name="Администрация"/>
+  <tab id="Advanced_Parameters" name="Конфигурация"/>
+  <tab id="Attachments" name="Загрузить"/>
+  <tab id="Attributes_and_Values" name="Атрибуты и комбинации"/>
+  <tab id="Carriers" name="Курьеры"/>
+  <tab id="Cart_Rules" name="Правила корзины"/>
+  <tab id="Catalog" name="Каталог"/>
+  <tab id="Catalog_Price_Rules" name="Правила каталога"/>
+  <tab id="Categories" name="категории"/>
+  <tab id="CMS" name="Страницы"/>
+  <tab id="CMS_Categories" name="Категории CMS"/>
+  <tab id="CMS_Pages" name="Страницы CMS"/>
+  <tab id="Combinations_Generator" name="Комбинации Генератор"/>
+  <tab id="Configuration" name="Конфигурация"/>
+  <tab id="Configuration_Information" name="Информация"/>
+  <tab id="Contacts" name="Контакты"/>
+  <tab id="Countries" name="Страны"/>
+  <tab id="Credit_Slips" name="Кредитные счета"/>
+  <tab id="CSV_Import" name="Импорт CSV"/>
+  <tab id="Currencies" name="Валюта"/>
+  <tab id="Customer_Service" name="Служба поддержки"/>
+  <tab id="Customers" name="Клиенты"/>
+  <tab id="Customers_2" name="Клиенты"/>
+  <tab id="Customers_1" name="Клиенты"/>
+  <tab id="Dashboard" name="Dashboard"/>
+  <tab id="CarrierWizard" name="Carrier"/>
   <tab id="DB_Backup" name="DB Backup"/>
-  <tab id="SQL_Manager" name="SQL Manager"/>
-  <tab id="Logs" name="Logs"/>
-  <tab id="Webservice" name="Webservice"/>
-  <tab id="Preferences_1" name="Preferences"/>
-  <tab id="Quick_Access" name="Quick Access"/>
-  <tab id="Employees" name="Employees"/>
-  <tab id="Profiles" name="Profiles"/>
-  <tab id="Permissions" name="Permissions"/>
-  <tab id="Menus" name="Menus"/>
-  <tab id="Stats_1" name="Stats"/>
-  <tab id="Search_Engines" name="Search Engines"/>
-  <tab id="Referrers" name="Referrers"/>
-  <tab id="Warehouses" name="Warehouses"/>
-  <tab id="Stock_Management" name="Stock Management"/>
-  <tab id="Stock_Movement" name="Stock Movement"/>
-  <tab id="Instant_Stock_Status" name="Instant Stock Status"/>
-  <tab id="Stock_Coverage" name="Stock Coverage"/>
-  <tab id="Supply_orders" name="Supply orders"/>
-  <tab id="Configuration" name="Configuration"/>
+  <tab id="Delivery_Slips" name="Счета на доставку"/>
+  <tab id="E-mail" name="E-mail"/>
+  <tab id="Employees" name="Сотрудники"/>
+  <tab id="Features" name="Свойства"/>
+  <tab id="General" name="Общие настройки"/>
+  <tab id="Geolocation" name="Геолокация"/>
+  <tab id="Groups" name="Группы"/>
+  <tab id="Home" name="Домой"/>
+  <tab id="Images" name="изображения"/>
+  <tab id="Instant_Stock_Status" name="Текущее состояние склада"/>
+  <tab id="Invoices" name="Инвойсы"/>
+  <tab id="Languages" name="Языки"/>
+  <tab id="Localization" name="Локализация"/>
+  <tab id="Localization_1" name="Локализация"/>
+  <tab id="Login" name="Логин"/>
+  <tab id="Logs" name="Журналы"/>
+  <tab id="Maintenance" name="Обслуживание"/>
+  <tab id="Manufacturers" name="производители"/>
+  <tab id="Marketing" name="Маркетинг"/>
+  <tab id="Menus" name="Закладки"/>
+  <tab id="Merchandise_Returns" name="Возвраты товаров"/>
+  <tab id="Modules_1" name="Модули"/>
+  <tab id="Modules" name="Модули"/>
+  <tab id="Modules_Themes_Catalog" name="Модули &amp; Шаблоны"/>
+  <tab id="Monitoring" name="Мониторинг"/>
+  <tab id="Multistore" name="Мульти-магазин"/>
+  <tab id="Order_Messages" name="Сообщения"/>
+  <tab id="Orders_2" name="Заказы"/>
+  <tab id="Orders" name="Заказы"/>
+  <tab id="Orders_1" name="Заказы"/>
+  <tab id="Outstanding" name="Неоплаченный(е)"/>
+  <tab id="Payment" name="Способ оплаты"/>
+  <tab id="Performance" name="Результат"/>
+  <tab id="Permissions" name="Права"/>
+  <tab id="Positions" name="Расположение"/>
+  <tab id="Preferences_1" name="Настройки"/>
+  <tab id="Preferences" name="Настройки"/>
+  <tab id="Price_Rules" name="Ценовые правила"/>
+  <tab id="Products_1" name="товары"/>
+  <tab id="Products" name="товары"/>
+  <tab id="Profiles" name="Профили"/>
+  <tab id="Quick_Access" name="Быстрый доступ"/>
+  <tab id="Referrers" name="Реферы"/>
+  <tab id="Search_1" name="Поиск"/>
+  <tab id="Search" name="Поиск"/>
+  <tab id="Search_Engines" name="Поисковые с-мы"/>
+  <tab id="SEO_URLs" name="SEO и URLs"/>
+  <tab id="Shipping" name="Доставка"/>
+  <tab id="Shipping_1" name="Настройки"/>
+  <tab id="Shop_URLs" name="URL магазина"/>
+  <tab id="Shopping_Carts" name="Корзины"/>
+  <tab id="Shops" name="Магазины"/>
+  <tab id="SQL_Manager" name="Менеджер SQL"/>
+  <tab id="States" name="Область"/>
+  <tab id="Stats" name="Статистика"/>
+  <tab id="Stats_1" name="Статистика"/>
+  <tab id="Statuses" name="Статусы"/>
+  <tab id="Stock" name="Запас"/>
+  <tab id="Stock_Coverage" name="Покрытие запасов"/>
+  <tab id="Stock_Management" name="Управление складом"/>
+  <tab id="Stock_Movement" name="Движение товаров"/>
+  <tab id="Store_Contacts" name="Контакты магазина"/>
+  <tab id="Suppliers" name="поставщики"/>
+  <tab id="Supply_orders" name="Заказы поставки"/>
+  <tab id="Tags" name="Метки"/>
+  <tab id="Tax_Rules" name="Налоги"/>
+  <tab id="Taxes" name="Налоги"/>
+  <tab id="Themes" name="Шаблоны"/>
+  <tab id="Titles" name="Формы обращения"/>
+  <tab id="Translations" name="Переводы"/>
+  <tab id="Warehouses" name="Склады"/>
+  <tab id="Webservice" name="WEB службы"/>
+  <tab id="Zones" name="Зоны"/>
 </entity_tab>

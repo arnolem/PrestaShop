@@ -1,6 +1,6 @@
 <?php
 /*
-* 2007-2013 PrestaShop
+* 2007-2015 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -19,7 +19,7 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author PrestaShop SA <contact@prestashop.com>
-*  @copyright  2007-2013 PrestaShop SA
+*  @copyright  2007-2015 PrestaShop SA
 *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 */
@@ -50,7 +50,7 @@ class AliasCore extends ObjectModel
 
 		if ($id)
 			parent::__construct($id);
-		else if ($alias && Validate::isValidSearch($alias))
+		elseif ($alias && Validate::isValidSearch($alias))
 		{
 			if (!Alias::isFeatureActive())
 			{
@@ -79,8 +79,12 @@ class AliasCore extends ObjectModel
 		}
 	}
 
+
 	public function add($autodate = true, $nullValues = false)
 	{
+		$this->alias = Tools::replaceAccentedChars($this->alias);
+		$this->search = Tools::replaceAccentedChars($this->search);
+
 		if (parent::add($autodate, $nullValues))
 		{
 			// Set cache of feature detachable to true
@@ -123,6 +127,22 @@ class AliasCore extends ObjectModel
 	public static function isFeatureActive()
 	{
 		return Configuration::get('PS_ALIAS_FEATURE_ACTIVE');
+	}
+
+	/**
+	 * This method is allow to know if a alias exist for AdminImportController
+	 * @since 1.5.6.0
+	 * @return bool
+	 */
+	public static function aliasExists($id_alias)
+	{
+		$row = Db::getInstance()->getRow('
+			SELECT `id_alias`
+			FROM '._DB_PREFIX_.'alias a
+			WHERE a.`id_alias` = '.(int)$id_alias
+		);
+
+		return isset($row['id_alias']);
 	}
 }
 

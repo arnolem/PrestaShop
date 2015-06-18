@@ -1,6 +1,6 @@
 <?php
 /*
-* 2007-2013 PrestaShop
+* 2007-2015 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -19,7 +19,7 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author PrestaShop SA <contact@prestashop.com>
-*  @copyright  2007-2013 PrestaShop SA
+*  @copyright  2007-2015 PrestaShop SA
 *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 */
@@ -53,6 +53,28 @@ class DbMySQLiCore extends Db
 		return $this->link;
 	}
 
+	public static function createDatabase($host, $user = null, $password = null, $database = null, $dropit = false)
+	{
+		if (is_null($user))
+			$user = $this->user;
+		if (is_null($password))
+			$password = $this->password;
+		if (is_null($database))
+			$database = $this->database;
+
+		if (strpos($host, ':') !== false)
+		{
+			list($host, $port) = explode(':', $host);
+			$link = @new mysqli($host, $user, $password, null, $port);
+		}
+		else
+			$link = @new mysqli($host, $user, $password);
+		$success = $link->query('CREATE DATABASE `'.str_replace('`', '\\`', $database).'`');
+		if ($dropit && ($link->query('DROP DATABASE `'.str_replace('`', '\\`', $database).'`') !== false))
+			return true;
+		return $success;
+	}
+
 	/**
 	 * @see DbCore::disconnect()
 	 */
@@ -76,7 +98,35 @@ class DbMySQLiCore extends Db
 	{
 		if (!$result)
 			$result = $this->result;
+
+		if (!is_object($result))
+			return false;
+
 		return $result->fetch_assoc();
+	}
+
+	/**
+	 * @see DbCore::getAll()
+	*/
+	protected function getAll($result = false)
+	{
+		if (!$result)
+			$result = $this->result;
+
+		if (!is_object($result))
+			return false;
+
+		if (method_exists($result, 'fetch_all'))
+			return $result->fetch_all(MYSQLI_ASSOC);
+		else
+		{
+			$ret = array();
+
+			while ($row = $this->nextRow($result))
+				$ret[] = $row;
+
+			return $ret;
+		}
 	}
 
 	/**
@@ -140,7 +190,7 @@ class DbMySQLiCore extends Db
 	 */
 	public function set_db($db_name)
 	{
-		return $this->link->query('USE '.pSQL($db_name));
+		return $this->link->query('USE `'.bqSQL($db_name).'`');
 	}
 
 	/**
@@ -169,34 +219,52 @@ class DbMySQLiCore extends Db
 		if (!$link->options(MYSQLI_OPT_CONNECT_TIMEOUT, $timeout))
 			return 1;
 
-		if (!$link->real_connect($server, $user, $pwd, $db))
+		// There is an @ because mysqli throw a warning when the database does not exists
+		if (!@$link->real_connect($server, $user, $pwd, $db))
 			return (mysqli_connect_errno() == 1049) ? 2 : 1;
 
-		if (strtolower($engine) == 'innodb')
-		{
-			$sql = 'SHOW VARIABLES WHERE Variable_name = \'have_innodb\'';
-			$result = $link->query($sql);
-			if (!$result)
-				return 4;
-			$row = $result->fetch_assoc();
-			if (!$row || strtolower($row['Value']) != 'yes')
-				return 4;
-		}
 		$link->close();
 		return 0;
 	}
-	
-	public static function checkCreatePrivilege($server, $user, $pwd, $db, $prefix, $engine)
+
+	public function getBestEngine()
+	{
+		$value = 'InnoDB';
+
+		$sql = 'SHOW VARIABLES WHERE Variable_name = \'have_innodb\'';
+		$result = $this->link->query($sql);
+		if (!$result)
+			$value = 'MyISAM';
+		$row = $result->fetch_assoc();
+		if (!$row || strtolower($row['Value']) != 'yes')
+			$value = 'MyISAM';
+
+		/* MySQL >= 5.6 */
+		$sql = 'SHOW ENGINES';
+		$result = $this->link->query($sql);
+		while ($row = $result->fetch_assoc())
+			if ($row['Engine'] == 'InnoDB')
+			{
+				if (in_array($row['Support'], array('DEFAULT', 'YES')))
+					$value = 'InnoDB';
+				break;
+			}
+		return $value;
+	}
+
+	public static function checkCreatePrivilege($server, $user, $pwd, $db, $prefix, $engine = null)
 	{
 		$link = @new mysqli($server, $user, $pwd, $db);
 		if (mysqli_connect_error())
 			return false;
 
-		$sql = '
-			CREATE TABLE `'.$prefix.'test` (
+		if ($engine === null)
+			$engine = 'MyISAM';
+
+		$result = $link->query('
+		CREATE TABLE `'.$prefix.'test` (
 			`test` tinyint(1) unsigned NOT NULL
-			) ENGINE=MyISAM';
-		$result = $link->query($sql);
+		) ENGINE='.$engine);
 
 		if (!$result)
 			return $link->error;
@@ -210,8 +278,17 @@ class DbMySQLiCore extends Db
 	 */
 	static public function tryUTF8($server, $user, $pwd)
 	{
-		$link = @new mysqli($server, $user, $pwd, $db);
+		$link = @new mysqli($server, $user, $pwd);
 		$ret = $link->query("SET NAMES 'UTF8'");
+		$link->close();
+		return $ret;
+	}
+
+	public static function checkAutoIncrement($server, $user, $pwd)
+	{
+		$link = @new mysqli($server, $user, $pwd);
+		$ret = (bool)(($result = $link->query('SELECT @@auto_increment_increment as aii')) && ($row = $result->fetch_assoc()) && $row['aii'] == 1);
+		$ret &= (bool)(($result = $link->query('SELECT @@auto_increment_offset as aio')) && ($row = $result->fetch_assoc()) && $row['aio'] == 1);
 		$link->close();
 		return $ret;
 	}
